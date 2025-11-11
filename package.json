@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "@videosdk.live/expo-ios-screen-share": "^0.0.3"
+  }
+}
