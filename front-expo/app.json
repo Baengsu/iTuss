@@ -1,0 +1,42 @@
+{
+  "expo": {
+    "name": "ios-share-demo",
+    "slug": "ios-share-demo",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "iossharedemo",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.iTuss.iossharedemo",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "화면 방송 중 마이크 오디오를 전송하기 위해 필요합니다."
+      }
+    },
+
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundImage": "./assets/images/android-icon-background.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
+    },
+
+    "web": {
+      /* 웹에서는 특별 설정 안 쓸 거라서 비워 둠 */
+    },
+
+    "plugins": [],
+
+    "experiments": {
+      "typedRoutes": false,
+      "reactCompiler": true
+    }
+  }
+}
