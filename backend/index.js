@@ -1,7 +1,4 @@
 // index.js
-// ===============================
-// 1) 라이브러리 로드
-// ===============================
 const express = require("express");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
@@ -10,44 +7,34 @@ const fs = require("fs");
 const path = require("path");
 
 const app = express();
-const PORT = process.env.PORT || 4000; // http://localhost:4000
-const JWT_SECRET = "change-this-secret-later"; // 나중에 환경변수로 빼기
+// Render 같은 PaaS에서는 PORT를 환경변수로 내려줌
+const PORT = process.env.PORT || 4000;
+const JWT_SECRET = "change-this-secret-later";
 
 app.use(cors());
 app.use(express.json());
 
-// ===============================
-// 2) "파일 DB" 설정 (db.json)
-// ===============================
+// ===== 1) 파일 DB 설정 =====
 const DB_PATH = path.join(__dirname, "db.json");
 
-// DB 읽기 함수
 function loadDb() {
   try {
     const raw = fs.readFileSync(DB_PATH, "utf8");
     const parsed = JSON.parse(raw);
-    // users 배열이 없으면 기본값
-    if (!parsed.users) {
-      parsed.users = [];
-    }
+    if (!parsed.users) parsed.users = [];
     return parsed;
   } catch (e) {
-    // 파일이 없거나 파싱 에러 → 기본값
     return { users: [] };
   }
 }
 
-// DB 쓰기 함수
 function saveDb() {
   fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2), "utf8");
 }
 
-// 실제로 사용하는 DB 객체 (서버 시작 시 1번 로드)
 let db = loadDb();
 
-// ===============================
-// 3) 유틸: 토큰에서 유저 찾기
-// ===============================
+// ===== 2) 인증 미들웨어 =====
 function authMiddleware(req, res, next) {
   const auth = req.headers.authorization;
   if (!auth || !auth.startsWith("Bearer ")) {
@@ -67,10 +54,8 @@ function authMiddleware(req, res, next) {
   }
 }
 
-// ===============================
-// 4) 회원가입
-// ===============================
-app.post("/signup", async (req, res) => {
+// ===== 3) 회원가입 (/api/signup) =====
+app.post("/api/signup", async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -91,20 +76,16 @@ app.post("/signup", async (req, res) => {
     id: String(db.users.length + 1),
     email,
     passwordHash,
-    deviceId: null, // 아직 디바이스 없음
+    deviceId: null,
   };
   db.users.push(user);
-
-  // ✅ 변경된 DB를 파일에 저장
   saveDb();
 
   return res.json({ ok: true });
 });
 
-// ===============================
-// 5) 로그인
-// ===============================
-app.post("/login", async (req, res) => {
+// ===== 4) 로그인 (/api/login) =====
+app.post("/api/login", async (req, res) => {
   const { email, password } = req.body;
 
   const user = db.users.find((u) => u.email === email);
@@ -128,10 +109,8 @@ app.post("/login", async (req, res) => {
   return res.json({ ok: true, token });
 });
 
-// ===============================
-// 6) 디바이스 등록 (1계정 1디바이스)
-// ===============================
-app.post("/device/register", authMiddleware, (req, res) => {
+// ===== 5) 디바이스 등록 (/api/device/register) =====
+app.post("/api/device/register", authMiddleware, (req, res) => {
   const { deviceId } = req.body;
   if (!deviceId) {
     return res
@@ -139,10 +118,7 @@ app.post("/device/register", authMiddleware, (req, res) => {
       .json({ ok: false, error: "deviceId 필요" });
   }
 
-  // 1계정 1디바이스 정책: 그냥 내 계정에 덮어쓰기
   req.user.deviceId = deviceId;
-
-  // ✅ DB 저장
   saveDb();
 
   return res.json({
@@ -151,10 +127,8 @@ app.post("/device/register", authMiddleware, (req, res) => {
   });
 });
 
-// ===============================
-// 7) 내 스트림 URL 조회
-// ===============================
-app.get("/stream-url", authMiddleware, (req, res) => {
+// ===== 6) 스트림 URL 조회 (/api/stream-url) =====
+app.get("/api/stream-url", authMiddleware, (req, res) => {
   if (!req.user.deviceId) {
     return res.status(400).json({
       ok: false,
@@ -162,7 +136,6 @@ app.get("/stream-url", authMiddleware, (req, res) => {
     });
   }
 
-  // 지금은 샘플 영상 URL (MP4)
   const dummyStreamUrl =
     "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4";
 
@@ -173,17 +146,13 @@ app.get("/stream-url", authMiddleware, (req, res) => {
   });
 });
 
-// ===============================
-// 8) 테스트용 루트 엔드포인트
-// ===============================
+// ===== 7) 루트(테스트용) =====
 app.get("/", (req, res) => {
-  res.send("Backend is running (with file DB)");
+  res.send("Backend is running (with file DB, /api prefix)");
 });
 
-// ===============================
-// 9) 서버 시작
-// ===============================
+// ===== 8) 서버 시작 =====
 app.listen(PORT, () => {
-  console.log(`✅ Backend server listening on http://localhost:${PORT}`);
+  console.log(`✅ Backend server listening on port ${PORT}`);
   console.log(`📁 DB file: ${DB_PATH}`);
 });
