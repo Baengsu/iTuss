@@ -99,9 +99,9 @@ app.get("/stream-url", authMiddleware, (req, res) => {
     return res.status(400).json({ ok: false, error: "등록된 디바이스가 없습니다." });
   }
 
-  // 지금은 연습이라 "가짜 스트림" 리턴
-  // 나중에 여기서 WebRTC/HLS URL을 돌려주면 됨.
-  const dummyStreamUrl = `https://example.com/streams/${req.user.deviceId}.m3u8`;
+  // 지금은 연습이라 "샘플 영상" 리턴 (mp4 파일)
+  const dummyStreamUrl =
+    "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4";
 
   return res.json({
     ok: true,
