@@ -10,7 +10,7 @@ const fs = require("fs");
 const path = require("path");
 
 const app = express();
-const PORT = 4000; // http://localhost:4000
+const PORT = process.env.PORT || 4000; // http://localhost:4000
 const JWT_SECRET = "change-this-secret-later"; // 나중에 환경변수로 빼기
 
 app.use(cors());
