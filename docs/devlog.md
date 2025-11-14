@@ -43,3 +43,5 @@
 9. https://dashboard.render.com/ 백엔드 클라우드
 10. https://app.netlify.com 프론트 웹 올리기
 ---
+### 2025-11-15
+1. 웹 페이지 netlify와 git 연동 해결
