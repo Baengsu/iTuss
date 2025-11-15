@@ -45,3 +45,9 @@
 ---
 ### 2025-11-15
 1. 웹 페이지 netlify와 git 연동 해결
+2. LiveKit Cloud를 이용하여 백엔드 -> 프론트 까지 LiveKit 구조 연결하기
+    - LIVEKIT_URL = wss://ituss-auzb5tx4.livekit.cloud
+    - LIVEKIT_API_KEY = APIvPFRc9Q3bCg4
+    - LIVEKIT_API_SECRET = 42JpW6b9e2R14kzrZKxck8hXLFF7KMP6xb0GHg3GYNO
+3. 백엔드 Livekit-server-sdk 설치
+4. livekit-info API 추가
