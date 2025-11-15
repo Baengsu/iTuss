@@ -49,5 +49,6 @@
     - LIVEKIT_URL = wss://ituss-auzb5tx4.livekit.cloud
     - LIVEKIT_API_KEY = APIvPFRc9Q3bCg4
     - LIVEKIT_API_SECRET = 42JpW6b9e2R14kzrZKxck8hXLFF7KMP6xb0GHg3GYNO
+    - https://cloud.livekit.io/
 3. 백엔드 Livekit-server-sdk 설치
 4. livekit-info API 추가
