@@ -16,11 +16,10 @@ const LIVEKIT_API_KEY = "APIvPFRc9Q3bCg4";
 const LIVEKIT_API_SECRET = "42JpW6b9e2R14kzrZKxck8hXLFF7KMP6xb0GHg3GYNO";
 const LIVEKIT_WS_URL = "wss://ituss-auzb5tx4.livekit.cloud";
 
-// 미들웨어
 app.use(cors());
 app.use(express.json());
 
-// 🔥 인메모리 DB (실제 서비스에서는 DB 사용해야 함!)
+// 🔥 인메모리 DB (실서비스에서는 DB 사용해야 함!)
 const users = []; // { id, email, passwordHash, deviceId }
 
 // ===========================================================
@@ -55,12 +54,18 @@ function authMiddleware(req, res, next) {
 app.post("/signup", async (req, res) => {
   const { email, password } = req.body;
 
-  if (!email || !password)
-    return res.status(400).json({ ok: false, error: "email, password 필요" });
+  if (!email || !password) {
+    return res
+      .status(400)
+      .json({ ok: false, error: "email, password 필요" });
+  }
 
   const exists = users.find((u) => u.email === email);
-  if (exists)
-    return res.status(400).json({ ok: false, error: "이미 존재하는 이메일" });
+  if (exists) {
+    return res
+      .status(400)
+      .json({ ok: false, error: "이미 존재하는 이메일" });
+  }
 
   const passwordHash = await bcrypt.hash(password, 10);
 
@@ -83,12 +88,18 @@ app.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
   const user = users.find((u) => u.email === email);
-  if (!user)
-    return res.status(400).json({ ok: false, error: "이메일 또는 비밀번호 오류" });
+  if (!user) {
+    return res
+      .status(400)
+      .json({ ok: false, error: "이메일 또는 비밀번호 오류" });
+  }
 
   const valid = await bcrypt.compare(password, user.passwordHash);
-  if (!valid)
-    return res.status(400).json({ ok: false, error: "이메일 또는 비밀번호 오류" });
+  if (!valid) {
+    return res
+      .status(400)
+      .json({ ok: false, error: "이메일 또는 비밀번호 오류" });
+  }
 
   const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "7d" });
 
@@ -101,28 +112,32 @@ app.post("/login", async (req, res) => {
 app.post("/device/register", authMiddleware, (req, res) => {
   const { deviceId } = req.body;
 
-  if (!deviceId)
-    return res.status(400).json({ ok: false, error: "deviceId 필요" });
+  if (!deviceId) {
+    return res
+      .status(400)
+      .json({ ok: false, error: "deviceId 필요" });
+  }
 
+  // 1계정 1디바이스: 그냥 덮어쓰기
   req.user.deviceId = deviceId;
 
   return res.json({ ok: true, deviceId });
 });
 
 // ===========================================================
-// 4. LiveKit 토큰 발급 API (핵심)
+// 4. LiveKit 토큰 발급 API  (/livekit-info)
 // ===========================================================
-//
-// 프론트는 이 API에서
+// 프론트는 여기서
 // - roomName
 // - wsUrl
-// - token
-// 을 받아 WebRTC 연결에 사용함.
-//
-app.post("/livekit/token", authMiddleware, (req, res) => {
+// - token (LiveKit JWT)
+// 를 받아서 livekit-client로 방에 접속함.
+app.get("/livekit-info", authMiddleware, async (req, res) => {
   try {
     if (!req.user.deviceId) {
-      return res.status(400).json({ ok: false, error: "등록된 디바이스가 없습니다." });
+      return res
+        .status(400)
+        .json({ ok: false, error: "등록된 디바이스가 없습니다." });
     }
 
     // 1 계정 = 1 디바이스 = 1 방
@@ -130,18 +145,19 @@ app.post("/livekit/token", authMiddleware, (req, res) => {
 
     // LiveKit Access Token 생성
     const at = new AccessToken(LIVEKIT_API_KEY, LIVEKIT_API_SECRET, {
-      identity: `viewer-${req.user.id}`,
-      ttl: 60 * 60, // 1시간 동안 유효
+      identity: `viewer-${req.user.id}`, // 시청자 identity
+      ttl: 60 * 60, // 1시간
     });
 
     at.addGrant({
       roomJoin: true,
       room: roomName,
-      canPublish: false, // 시청자 = Publish 불가
+      canPublish: false, // 시청자 = publish X
       canSubscribe: true,
     });
 
-    const token = at.toJwt();
+    // 🔥 핵심: toJwt()는 Promise<string> 이라서 반드시 await 해야 함
+    const token = await at.toJwt();
 
     return res.json({
       ok: true,
@@ -151,7 +167,9 @@ app.post("/livekit/token", authMiddleware, (req, res) => {
     });
   } catch (err) {
     console.error("LiveKit token error:", err);
-    return res.status(500).json({ ok: false, error: "LiveKit 토큰 생성 실패" });
+    return res
+      .status(500)
+      .json({ ok: false, error: "LiveKit 토큰 생성 실패" });
   }
 });
 

@@ -9,54 +9,47 @@ import {
   Platform,
 } from "react-native";
 
-// 🔗 백엔드 서버 주소 (Render 기준) - 필요하면 localhost로 바꿔서 테스트 가능
-// 예) 로컬에서만 테스트할 때: const API_BASE = "http://localhost:4000";
+// 🔗 백엔드 주소 (Render 기준)
+// 로컬에서만 테스트할 땐 "http://localhost:4000" 으로 바꿔도 됨
 const API_BASE = "https://ituss.onrender.com";
 
-// 🔥 LiveKit Web SDK (웹에서만 사용)
+// 🔥 LiveKit Web SDK (웹에서만 실제로 동작)
 import { Room, RoomEvent, Track } from "livekit-client";
 
 export default function App() {
   // ==========================================
-  // 공통 상태
+  // 상태 관리
   // ==========================================
   const [page, setPage] = useState("auth"); // 'auth' | 'signupDevice' | 'stream'
 
-  // 계정 정보
   const [email, setEmail] = useState("test@example.com");
   const [password, setPassword] = useState("1234");
   const [token, setToken] = useState(null); // 백엔드 JWT
 
-  // 디바이스 (1계정 1디바이스 정책)
   const [deviceId, setDeviceId] = useState("my-iphone-01");
 
-  // UI 상태
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState(""); // 'success' | 'error'
 
-  // LiveKit 관련 상태
+  // LiveKit 관련
   const [lkRoomName, setLkRoomName] = useState("");
   const [lkConnected, setLkConnected] = useState(false);
 
-  const roomRef = useRef(null); // LiveKit Room 인스턴스
-  const videoRef = useRef(null); // <video> DOM 참조
+  const roomRef = useRef(null);
+  const videoRef = useRef(null);
 
   // ==========================================
-  // 공통 메시지 유틸
+  // 메시지 유틸
   // ==========================================
-  function showMessage(type, text) {
-    setMessageType(type); // 'success' or 'error'
+  function show(type, text) {
+    setMessageType(type);
     setMessage(text);
-
-    // 3초 뒤 자동 삭제
-    setTimeout(() => {
-      setMessage("");
-    }, 3000);
+    setTimeout(() => setMessage(""), 3000);
   }
 
   // ==========================================
-  // 1. 계정정보 화면: 로그인 → 스트림 페이지 이동
+  // 로그인 → 스트림 페이지로 이동
   // ==========================================
   async function loginAndGoStream() {
     try {
@@ -69,25 +62,23 @@ export default function App() {
       });
 
       const data = await res.json();
-
       if (!data.ok || !data.token) {
-        showMessage("error", data.error || "로그인 실패");
-        return;
+        return show("error", data.error || "로그인 실패");
       }
 
       setToken(data.token);
-      showMessage("success", "로그인 성공! 스트림 화면으로 이동합니다.");
       setPage("stream");
+      show("success", "로그인 성공! 스트림 화면으로 이동합니다.");
     } catch (e) {
       console.error(e);
-      showMessage("error", "서버 연결 실패 (로그인)");
+      show("error", "서버 연결 실패 (로그인)");
     } finally {
       setLoading(false);
     }
   }
 
   // ==========================================
-  // 2. 회원가입 (회원가입 + 디바이스 등록 화면에서 사용)
+  // 회원가입
   // ==========================================
   async function signupOnly() {
     try {
@@ -100,23 +91,21 @@ export default function App() {
       });
 
       const data = await res.json();
-
       if (!data.ok) {
-        showMessage("error", data.error || "회원가입 실패");
-        return;
+        return show("error", data.error || "회원가입 실패");
       }
 
-      showMessage("success", "회원가입 성공! 이제 디바이스를 등록하세요.");
+      show("success", "회원가입 성공! 이제 디바이스를 등록하세요.");
     } catch (e) {
       console.error(e);
-      showMessage("error", "서버 연결 실패 (회원가입)");
+      show("error", "서버 연결 실패 (회원가입)");
     } finally {
       setLoading(false);
     }
   }
 
   // ==========================================
-  // 3. 디바이스 등록 (토큰 없으면 자동 로그인 후 등록)
+  // 디바이스 등록 (로그인 필요)
   // ==========================================
   async function registerDeviceWithAutoLogin() {
     try {
@@ -124,29 +113,27 @@ export default function App() {
 
       let currentToken = token;
 
-      // 1) 토큰이 없으면 먼저 로그인 시도
+      // 토큰 없으면 로그인 먼저
       if (!currentToken) {
         const loginRes = await fetch(`${API_BASE}/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password }),
         });
-
         const loginData = await loginRes.json();
+
         if (!loginData.ok || !loginData.token) {
-          showMessage(
+          return show(
             "error",
             loginData.error || "로그인 실패 (디바이스 등록 전 단계)"
           );
-          return;
         }
 
         currentToken = loginData.token;
         setToken(loginData.token);
-        showMessage("success", "로그인 성공! 디바이스 등록을 진행합니다.");
+        show("success", "로그인 성공! 디바이스 등록을 진행합니다.");
       }
 
-      // 2) 디바이스 등록
       const res = await fetch(`${API_BASE}/device/register`, {
         method: "POST",
         headers: {
@@ -157,60 +144,51 @@ export default function App() {
       });
 
       const data = await res.json();
-
       if (!data.ok) {
-        showMessage("error", data.error || "디바이스 등록 실패");
-        return;
+        return show("error", data.error || "디바이스 등록 실패");
       }
 
-      showMessage(
-        "success",
-        `디바이스 등록 완료! (deviceId: ${data.deviceId})`
-      );
+      show("success", `디바이스 등록 완료! (deviceId: ${data.deviceId})`);
     } catch (e) {
       console.error(e);
-      showMessage("error", "서버 연결 실패 (디바이스 등록)");
+      show("error", "서버 연결 실패 (디바이스 등록)");
     } finally {
       setLoading(false);
     }
   }
 
   // ==========================================
-  // 4. LiveKit 방 접속 (시청 전용)
+  // LiveKit 연결
   // ==========================================
   async function connectLiveKit() {
     if (Platform.OS !== "web") {
-      showMessage("error", "실시간 시청은 웹 브라우저에서만 가능합니다.");
+      show("error", "실시간 시청은 웹 브라우저에서만 지원됩니다.");
       return;
     }
-
     if (!token) {
-      showMessage("error", "먼저 로그인부터 해주세요.");
+      show("error", "먼저 로그인부터 해주세요.");
       return;
     }
 
     try {
       setLoading(true);
 
-      // 1) 백엔드에서 LiveKit 토큰/URL 정보 받아오기
-      const res = await fetch(`${API_BASE}/livekit/token`, {
-        method: "POST",
+      // 1) 백엔드에서 LiveKit 정보 받아오기
+      const res = await fetch(`${API_BASE}/livekit-info`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
       const data = await res.json();
-
       if (!data.ok) {
-        showMessage("error", data.error || "LiveKit 토큰 조회 실패");
-        return;
+        return show("error", data.error || "LiveKit 토큰 조회 실패");
       }
 
       const { wsUrl, roomName, token: lkToken } = data;
       setLkRoomName(roomName);
 
-      // 2) 기존에 연결된 방이 있으면 정리
+      // 2) 기존 연결 정리
       if (roomRef.current) {
         roomRef.current.disconnect();
         roomRef.current = null;
@@ -219,42 +197,38 @@ export default function App() {
         videoRef.current.srcObject = null;
       }
 
-      // 3) LiveKit Room 생성 및 연결
+      // 3) LiveKit Room 생성
       const room = new Room();
       roomRef.current = room;
 
-      // Remote Video 구독 이벤트 처리
-      room.on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
-        if (track.kind === Track.Kind.Video) {
-          // video 태그에 직접 attach
-          if (videoRef.current) {
-            track.attach(videoRef.current);
-          }
+      // 리모트 비디오 트랙 구독
+      room.on(RoomEvent.TrackSubscribed, (track) => {
+        if (track.kind === Track.Kind.Video && videoRef.current) {
+          track.attach(videoRef.current);
         }
       });
 
-      // 트랙 해제 시 정리(선택)
-      room.on(RoomEvent.TrackUnsubscribed, (track, publication, participant) => {
+      room.on(RoomEvent.TrackUnsubscribed, (track) => {
         if (track.kind === Track.Kind.Video && videoRef.current) {
           track.detach(videoRef.current);
         }
       });
 
-      // 방 연결
+      // 4) LiveKit 방 연결
       await room.connect(wsUrl, lkToken);
 
       setLkConnected(true);
-      showMessage("success", `LiveKit 방 연결 성공! (room: ${roomName})`);
+      show("success", `LiveKit 방 연결 성공! (room: ${roomName})`);
     } catch (e) {
       console.error(e);
-      showMessage("error", "LiveKit 연결 실패");
+      show("error", "LiveKit 연결 실패 (토큰/권한 문제일 수 있음)");
     } finally {
       setLoading(false);
     }
   }
 
   // ==========================================
-  // 5. LiveKit 연결 해제
+  // LiveKit 연결 해제
   // ==========================================
   function disconnectLiveKit() {
     try {
@@ -266,13 +240,13 @@ export default function App() {
         videoRef.current.srcObject = null;
       }
       setLkConnected(false);
-      showMessage("success", "LiveKit 연결 해제 완료");
+      show("success", "LiveKit 연결 해제 완료");
     } catch (e) {
       console.error(e);
     }
   }
 
-  // 컴포넌트 언마운트 시에도 방 정리
+  // 언마운트 시 정리
   useEffect(() => {
     return () => {
       if (roomRef.current) {
@@ -441,7 +415,7 @@ export default function App() {
   }
 
   // ==========================================
-  // 화면 3) 스트림 / LiveKit 시청
+  // 화면 3) LiveKit 시청
   // ==========================================
   function renderStreamPage() {
     return (
@@ -458,10 +432,10 @@ export default function App() {
         </Text>
 
         <Text style={{ marginBottom: 4, color: "#666" }}>
-          현재 이메일: {email || "(미입력)"}
+          현재 이메일: {email}
         </Text>
         <Text style={{ marginBottom: 12, color: "#666" }}>
-          디바이스 ID: {deviceId || "(미등록)"}
+          디바이스 ID: {deviceId}
         </Text>
 
         {Platform.OS === "web" ? (
@@ -473,6 +447,7 @@ export default function App() {
                 disabled={loading}
               />
             </View>
+
             {lkConnected && (
               <View style={{ marginBottom: 8 }}>
                 <Button
@@ -484,10 +459,9 @@ export default function App() {
             )}
 
             <Text style={{ marginTop: 12, marginBottom: 4 }}>
-              현재 방: {lkRoomName || "(아직 없음)"}
+              현재 방: {lkRoomName || "(없음)"}
             </Text>
 
-            {/* WebRTC 비디오 표시 영역 */}
             <View style={{ marginTop: 12 }}>
               <video
                 ref={videoRef}
@@ -504,12 +478,11 @@ export default function App() {
             </View>
           </>
         ) : (
-          <Text style={{ color: "#c00" }}>
-            ⚠️ 실시간 시청은 현재 웹 브라우저(Platform: web)에서만 지원됩니다.
+          <Text style={{ color: "#c00", marginTop: 8 }}>
+            ⚠️ 실시간 시청은 현재 웹 브라우저에서만 지원됩니다.
           </Text>
         )}
 
-        {/* 네비게이션 버튼 */}
         <View style={{ marginTop: 24 }}>
           <View style={{ marginBottom: 8 }}>
             <Button
@@ -539,13 +512,12 @@ export default function App() {
         backgroundColor: "#f4f4f4",
       }}
     >
-      {/* 상단 공통 타이틀 */}
       <View style={{ marginBottom: 24 }}>
         <Text style={{ fontSize: 24, fontWeight: "bold", marginBottom: 8 }}>
           📌 iOS 화면 공유 서비스 - 시청 웹앱 (LiveKit Viewer)
         </Text>
         <Text style={{ color: "#555" }}>
-          1) 계정 정보 → 2) 회원가입/디바이스 등록 → 3) LiveKit 실시간 시청
+          1) 계정 정보 → 2) 회원가입/디바이스 등록 → 3) 실시간 시청
         </Text>
       </View>
 
@@ -553,12 +525,10 @@ export default function App() {
       {page === "signupDevice" && renderSignupDevicePage()}
       {page === "stream" && renderStreamPage()}
 
-      {/* 로딩 표시 */}
       {loading && (
         <Text style={{ textAlign: "center", marginTop: 8 }}>로딩 중...</Text>
       )}
 
-      {/* 하단 메시지 박스 */}
       {message !== "" && (
         <View
           style={{
