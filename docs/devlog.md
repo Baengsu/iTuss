@@ -52,3 +52,8 @@
     - https://cloud.livekit.io/
 3. 백엔드 Livekit-server-sdk 설치
 4. livekit-info API 추가
+---
+### 2025-11-16
+1. livekit 업데이트 및 실행되는지 확인
+2. livekit 관련 api 업데이트
+3. livekit 시청자 관점에서 웹앱 설정
