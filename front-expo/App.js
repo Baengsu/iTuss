@@ -11,7 +11,7 @@ import {
 
 // 🔗 백엔드 서버 주소 (Render 기준) - 필요하면 localhost로 바꿔서 테스트 가능
 // 예) 로컬에서만 테스트할 때: const API_BASE = "http://localhost:4000";
-const API_BASE = "https://ituss.onrender.com/api";
+const API_BASE = "https://ituss.onrender.com";
 
 // 🔥 LiveKit Web SDK (웹에서만 사용)
 import { Room, RoomEvent, Track } from "livekit-client";
