@@ -12,9 +12,9 @@ const PORT = 4000;
 const JWT_SECRET = "change-this-secret-later"; // 나중에 .env로 이동
 
 // 🔥 LiveKit Cloud 설정 (네 콘솔 값으로 교체한 상태)
-const LIVEKIT_API_KEY = "APIvPFRc9Q3bCg4";
-const LIVEKIT_API_SECRET = "42JpW6b9e2R14kzrZKxck8hXLFF7KMP6xb0GHg3GYNO";
-const LIVEKIT_WS_URL = "wss://ituss-auzb5tx4.livekit.cloud";
+const LIVEKIT_API_KEY = "APIeYc2bimKNP7Z";
+const LIVEKIT_API_SECRET = "bHen1yTBOb3V6Hc7Y31rpQPS6Hp8PiSyZHhFXZZn2xX";
+const LIVEKIT_WS_URL = "wss://ituss-aqjrofe3.livekit.cloud";
 
 app.use(cors());
 app.use(express.json());
