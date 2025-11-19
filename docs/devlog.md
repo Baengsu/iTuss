@@ -57,3 +57,40 @@
 1. livekit 업데이트 및 실행되는지 확인
 2. livekit 관련 api 업데이트
 3. livekit 시청자 관점에서 웹앱 설정
+---
+### 2025-11-18
+1. 기존 IOS 미러링 앱을 레딧에서 찾았습니다.
+2. 디바이스가 로컬 서버로 되는 것인데 저 역시 이 형태로 사용하려고 합니다.
+3. 기존 백엔드 및 서버 모두 shutdown하고 새로 시작하려고합니다.
+4. iTuss 2.0 시작
+5. npm 패키지 설치 
+    - npx create-next-app@latest ituss
+6. 패키지 설치
+    - cd ituss -> npmnpm install hls.js clsx
+---
+iTuss-web/<br>
+ └─ src/<br>
+ &nbsp;&nbsp;&nbsp;├─ app/<br>
+ &nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├─ page.tsx &nbsp;&nbsp;&nbsp;# 메인 페이지 (Stream Viewer)<br>
+ &nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└─ globals.css &nbsp;&nbsp;&nbsp;# 전역 스타일<br>
+ &nbsp;&nbsp;&nbsp;│<br>
+ &nbsp;&nbsp;&nbsp;├─ components/<br>
+ &nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├─ Player.tsx &nbsp;&nbsp;&nbsp;# 영상 플레이어 컴포넌트<br>
+ &nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├─ Header.tsx &nbsp;&nbsp;&nbsp;# 헤더 UI<br>
+ &nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└─ Footer.tsx &nbsp;&nbsp;&nbsp;# 푸터 UI<br>
+ &nbsp;&nbsp;&nbsp;│<br>
+ &nbsp;&nbsp;&nbsp;└─ utils/<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─ validateUrl.ts &nbsp;&nbsp;&nbsp;# URL 검증 유틸<br>
+
+---
+7. 페이지 UI 업데이트 
+    - 완전 반응현 전체화면 스트리밍 웹 뷰어 완성
+    - 주소입력 -> 자동판단 -> 재생
+8. page.tsx, tsconfig.json, Footer, Header, Player 수정
+---
+### 2025-11-19
+1. 개발자가 아이온2에 미쳐버림. 더딤
+2. 초경량 뷰어 + 아이폰 자체 서버 구현으로 가기로 바꿈.
+3. 조건은 많이 붙겠지만 iTuss3.0 개발 시작. 2.0은 백업본으로 남겨놓겠음.
+4. 초경량으로 팝업만 브라우저에서 나오게 만듬 왜냐하면 주의사항을 다시한번 말하고 체크 후 실행되게 하려고.
+5. iTuss 3.0 앱 UI 업데이트
