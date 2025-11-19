@@ -1,65 +1,77 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
+import Player from "@/components/Player";
+
+/** 동의 화면 컴포넌트 */
+function ConsentScreen({ onAgree }: { onAgree: () => void }) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-black text-white px-4">
+      <div className="w-full max-w-md bg-gray-900/90 rounded-2xl p-6 shadow-xl space-y-4">
+        <h1 className="text-2xl font-semibold">화면 미러링 사용 안내</h1>
+
+        <ul className="text-sm text-gray-200 list-disc pl-4 space-y-1">
+          <li>이 브라우저에 현재 iPhone 화면이 그대로 표시됩니다.</li>
+          <li>알림, 메신저 내용 등 민감한 정보도 함께 노출될 수 있습니다.</li>
+          <li>공용 PC / 화면 공유 중인 상태에서는 사용에 주의해 주세요.</li>
+          <li>스트리밍 중에는 네트워크 데이터가 소모됩니다.</li>
+        </ul>
+
+        <p className="text-xs text-gray-400">
+          위 내용을 모두 이해하고 동의하는 경우에만 시청을 진행해 주세요.
+        </p>
+
+        <button
+          onClick={onAgree}
+          className="w-full mt-2 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 font-semibold"
+        >
+          동의 후 시청 진행
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function Home() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+  const searchParams = useSearchParams();
+
+  // 주소창에서 ?url=... 로 넘어온 스트림 주소
+  const streamUrl = useMemo(
+    () => (searchParams.get("url") || "").trim(),
+    [searchParams]
+  );
+
+  const [agreed, setAgreed] = useState(false);
+
+  // 1) url 자체가 안 들어온 경우
+  if (!streamUrl) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black text-white px-4">
+        <div className="max-w-md text-center space-y-4">
+          <h1 className="text-2xl font-semibold">유효한 스트림이 없습니다</h1>
+          <p className="text-sm text-gray-300">
+            브라우저 주소창에{" "}
+            <code className="bg-gray-800 px-1 rounded">?url=스트림주소</code> 를
+            붙여서 접속해야 합니다.
+          </p>
+          <p className="text-xs text-gray-500 break-all">
+            예시: http://localhost:3000?url=http://192.168.0.5:8080/stream.m3u8
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      </div>
+    );
+  }
+
+  // 2) 주의사항 동의 전: 동의 화면만 보여주기
+  if (!agreed) {
+    return <ConsentScreen onAgree={() => setAgreed(true)} />;
+  }
+
+  // 3) 동의 후: 전체 화면 스트리밍
+  return (
+    <div className="w-screen h-screen bg-black">
+      <Player url={streamUrl} />
     </div>
   );
 }
